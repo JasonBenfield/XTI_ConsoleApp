@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="3.12.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.1" />
+    <PackageReference Include="XTI_Core.Fakes" Version="1.8.2" />
+    <PackageReference Include="XTI_TempLog.Fakes" Version="1.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Lib\XTI_ConsoleApp.Extensions\XTI_ConsoleApp.Extensions.csproj" />
+    <ProjectReference Include="..\..\Lib\XTI_ConsoleApp.Fakes\XTI_ConsoleApp.Fakes.csproj" />
+    <ProjectReference Include="..\..\Lib\XTI_ServiceApp.Fakes\XTI_ServiceApp.Fakes.csproj" />
+  </ItemGroup>
+
+</Project>

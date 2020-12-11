@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="5.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="5.0.0" />
+    <PackageReference Include="MainDB.EF.InMemory" Version="1.7.6" />
+    <PackageReference Include="XTI_Core.Fakes" Version="1.8.2" />
+    <PackageReference Include="XTI_TempLog.Fakes" Version="1.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\XTI_ServiceApp\XTI_ServiceApp.csproj" />
+  </ItemGroup>
+
+</Project>
