@@ -18,6 +18,7 @@ namespace XTI_ServiceApp.Extensions
     {
         public static void AddXtiServiceAppServices(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddMemoryCache();
             services.AddXtiDataProtection();
             services.AddAppDbContextForSqlServer(configuration);
             services.AddSingleton<Clock, UtcClock>();
