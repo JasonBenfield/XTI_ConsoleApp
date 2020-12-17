@@ -40,6 +40,14 @@ function ConsoleApp-New-XtiVersion {
     $script:consoleAppConfig | New-XtiVersion @PsBoundParameters
 }
 
+function ConsoleApp-Xti-Merge {
+    param(
+        [Parameter(Position=0)]
+        [string] $CommitMessage
+    )
+    $script:consoleAppConfig | Xti-Merge @PsBoundParameters
+}
+
 function ConsoleApp-New-XtiPullRequest {
     param(
         [Parameter(Position=0)]
