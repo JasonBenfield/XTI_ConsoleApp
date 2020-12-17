@@ -17,6 +17,7 @@ namespace XTI_ConsoleApp.Extensions
     {
         public static void AddXtiConsoleAppServices(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddMemoryCache();
             services.AddXtiDataProtection();
             services.AddAppDbContextForSqlServer(configuration);
             services.AddSingleton<Clock, UtcClock>();
