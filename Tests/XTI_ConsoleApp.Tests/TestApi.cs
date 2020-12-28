@@ -34,10 +34,15 @@ namespace XTI_ConsoleApp.Tests
             )
         {
             var actions = Actions<AppApiActionCollection>();
-            Run = actions.Add
+            RunContinuously = actions.Add
             (
-                nameof(Run),
-                () => new ContinuousRunAction(counter)
+                nameof(RunContinuously),
+                () => new RunContinuouslyAction(counter)
+            );
+            RunUntilSuccess = actions.Add
+            (
+                nameof(RunUntilSuccess),
+                () => new RunUntilSuccessAction(counter)
             );
             OptionalRun = actions.Add
             (
@@ -46,15 +51,16 @@ namespace XTI_ConsoleApp.Tests
             );
         }
 
-        public AppApiAction<EmptyRequest, EmptyActionResult> Run { get; }
+        public AppApiAction<EmptyRequest, EmptyActionResult> RunContinuously { get; }
+        public AppApiAction<EmptyRequest, EmptyActionResult> RunUntilSuccess { get; }
         public AppApiAction<EmptyRequest, EmptyActionResult> OptionalRun { get; }
     }
 
-    public sealed class ContinuousRunAction : AppAction<EmptyRequest, EmptyActionResult>
+    public sealed class RunContinuouslyAction : AppAction<EmptyRequest, EmptyActionResult>
     {
         private readonly Counter counter;
 
-        public ContinuousRunAction(Counter counter)
+        public RunContinuouslyAction(Counter counter)
         {
             this.counter = counter;
         }
@@ -62,6 +68,22 @@ namespace XTI_ConsoleApp.Tests
         public Task<EmptyActionResult> Execute(EmptyRequest model)
         {
             counter.IncrementContinuous();
+            return Task.FromResult(new EmptyActionResult());
+        }
+    }
+
+    public sealed class RunUntilSuccessAction : AppAction<EmptyRequest, EmptyActionResult>
+    {
+        private readonly Counter counter;
+
+        public RunUntilSuccessAction(Counter counter)
+        {
+            this.counter = counter;
+        }
+
+        public Task<EmptyActionResult> Execute(EmptyRequest model)
+        {
+            counter.IncrementUntilSuccess();
             return Task.FromResult(new EmptyActionResult());
         }
     }

@@ -29,6 +29,18 @@ namespace XTI_ConsoleApp.Tests
         }
 
         [Test]
+        public async Task ShouldRunOnce_WhenTypeIsPeriodicUntilSuccess()
+        {
+            var host = BuildHost().Build();
+            setTimeWithinSchedule(host.Services);
+            var counter = host.Services.GetService<Counter>();
+            var _ = Task.Run(() => host.Run());
+            await delay();
+            Assert.That(counter.UntilSuccessValue, Is.EqualTo(1));
+            await host.StopAsync();
+        }
+
+        [Test]
         public async Task ShouldStartRequest()
         {
             var host = BuildHost().Build();
@@ -38,7 +50,7 @@ namespace XTI_ConsoleApp.Tests
             await delay();
             var startRequests = await getStartRequests(host.Services);
             var api = host.Services.GetService<TestApi>();
-            var startRequest = startRequests.FirstOrDefault(r => api.Test.Run.Path.Equals(r.Path));
+            var startRequest = startRequests.FirstOrDefault(r => api.Test.RunContinuously.Path.Equals(r.Path));
             Assert.That(startRequest, Is.Not.Null, "Should add start request");
             await host.StopAsync();
         }
@@ -86,7 +98,7 @@ namespace XTI_ConsoleApp.Tests
         }
 
         [Test]
-        public async Task ShouldNotRunScheduledAction()
+        public async Task ShouldNotRunScheduledAction_WhenNotInSchedule()
         {
             var host = BuildHost().Build();
             var clock = (FakeClock)host.Services.GetService<Clock>();
@@ -196,7 +208,7 @@ namespace XTI_ConsoleApp.Tests
                     config.AddInMemoryCollection(new[]
                     {
                         KeyValuePair.Create("AppAction:ScheduledActions:0:GroupName", "Test"),
-                        KeyValuePair.Create("AppAction:ScheduledActions:0:ActionName", "Run"),
+                        KeyValuePair.Create("AppAction:ScheduledActions:0:ActionName", "RunContinuously"),
                         KeyValuePair.Create("AppAction:ScheduledActions:0:Interval", "100"),
                         KeyValuePair.Create("AppAction:ScheduledActions:0:Schedule:WeeklyTimeRanges:0:DaysOfWeek:0", "Friday"),
                         KeyValuePair.Create("AppAction:ScheduledActions:0:Schedule:WeeklyTimeRanges:0:TimeRanges:0:StartTime", "900"),
@@ -206,7 +218,14 @@ namespace XTI_ConsoleApp.Tests
                         KeyValuePair.Create("AppAction:ScheduledActions:1:Interval", "100"),
                         KeyValuePair.Create("AppAction:ScheduledActions:1:Schedule:WeeklyTimeRanges:0:DaysOfWeek:0", "Friday"),
                         KeyValuePair.Create("AppAction:ScheduledActions:1:Schedule:WeeklyTimeRanges:0:TimeRanges:0:StartTime", "900"),
-                        KeyValuePair.Create("AppAction:ScheduledActions:1:Schedule:WeeklyTimeRanges:0:TimeRanges:0:EndTime", "1000")
+                        KeyValuePair.Create("AppAction:ScheduledActions:1:Schedule:WeeklyTimeRanges:0:TimeRanges:0:EndTime", "1000"),
+                        KeyValuePair.Create("AppAction:ScheduledActions:2:GroupName", "Test"),
+                        KeyValuePair.Create("AppAction:ScheduledActions:2:ActionName", "RunUntilSuccess"),
+                        KeyValuePair.Create("AppAction:ScheduledActions:2:Type", "PeriodicUntilSuccess"),
+                        KeyValuePair.Create("AppAction:ScheduledActions:2:Interval", "1"),
+                        KeyValuePair.Create("AppAction:ScheduledActions:2:Schedule:WeeklyTimeRanges:0:DaysOfWeek:0", "Friday"),
+                        KeyValuePair.Create("AppAction:ScheduledActions:2:Schedule:WeeklyTimeRanges:0:TimeRanges:0:StartTime", "900"),
+                        KeyValuePair.Create("AppAction:ScheduledActions:2:Schedule:WeeklyTimeRanges:0:TimeRanges:0:EndTime", "1000")
                     });
                 })
                 .UseWindowsService()

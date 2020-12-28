@@ -69,7 +69,7 @@ namespace XTI_ConsoleApp.Tests
                     config.AddInMemoryCollection(new[]
                     {
                         KeyValuePair.Create("AppAction:ScheduledActions:0:GroupName", "Test"),
-                        KeyValuePair.Create("AppAction:ScheduledActions:0:ActionName", "Run"),
+                        KeyValuePair.Create("AppAction:ScheduledActions:0:ActionName", "RunContinuously"),
                         KeyValuePair.Create("AppAction:ScheduledActions:0:Interval", "500"),
                         KeyValuePair.Create("AppAction:ScheduledActions:0:Schedule:WeeklyTimeRanges:0:DaysOfWeek:0", "Friday"),
                         KeyValuePair.Create("AppAction:ScheduledActions:0:Schedule:WeeklyTimeRanges:0:TimeRanges:0:StartTime", "900"),

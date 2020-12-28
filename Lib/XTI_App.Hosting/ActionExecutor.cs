@@ -28,48 +28,93 @@ namespace XTI_App.Hosting
             this.execute = execute;
         }
 
-        public async Task Run()
+        public enum Results
+        {
+            None,
+            Succeeded,
+            Error,
+            NotRequired
+        }
+
+        public async Task<Results> Run()
         {
             using var scope = sp.CreateScope();
-            var session = scope.ServiceProvider.GetService<TempLogSession>();
-            var path = scope.ServiceProvider.GetService<XtiBasePath>()
-                .Value()
-                .WithGroup(groupName)
-                .WithAction(actionName)
-                .Format();
-            AppApiAction<EmptyRequest, EmptyActionResult> action;
+            var result = await verifyActionIsRequired(scope.ServiceProvider);
+            if (result == Results.None)
+            {
+                result = await run(scope.ServiceProvider);
+            }
+            return result;
+        }
+
+        private async Task<Results> verifyActionIsRequired(IServiceProvider services)
+        {
+            var result = Results.None;
+            var session = services.GetService<TempLogSession>();
             try
             {
-                var api = scope.ServiceProvider.GetService<AppApi>();
-                action = api
-                    .Group(groupName)
-                    .Action<EmptyRequest, EmptyActionResult>(actionName);
+                var action = getApiAction(services);
                 var isOptional = await action.IsOptional();
                 if (isOptional)
                 {
-                    return;
+                    result = Results.NotRequired;
                 }
             }
             catch (Exception ex)
             {
+                var path = getPath(services);
                 await session.StartRequest(path);
                 await session.LogException(AppEventSeverity.Values.CriticalError, ex, $"Unexpected error in {path}");
                 await session.EndRequest();
-                return;
+                result = Results.Error;
             }
+            return result;
+        }
+
+        private async Task<Results> run(IServiceProvider services)
+        {
+            Results result = Results.None;
+            var session = services.GetService<TempLogSession>();
+            var path = getPath(services);
             try
             {
                 await session.StartRequest(path);
+                var action = getApiAction(services);
                 await execute(action);
+                result = Results.Succeeded;
             }
             catch (Exception ex)
             {
-                await session.LogException(AppEventSeverity.Values.CriticalError, ex, $"Unexpected error in {path}");
+                result = Results.Error;
+                await session.LogException
+                (
+                    AppEventSeverity.Values.CriticalError,
+                    ex,
+                    $"Unexpected error in {path}"
+                );
             }
             finally
             {
                 await session.EndRequest();
             }
+            return result;
+        }
+
+        private string getPath(IServiceProvider services)
+        {
+            return services.GetService<XtiBasePath>()
+                .Value()
+                .WithGroup(groupName)
+                .WithAction(actionName)
+                .Format();
+        }
+
+        private AppApiAction<EmptyRequest, EmptyActionResult> getApiAction(IServiceProvider services)
+        {
+            var api = services.GetService<AppApi>();
+            return api
+                .Group(groupName)
+                .Action<EmptyRequest, EmptyActionResult>(actionName);
         }
     }
 }

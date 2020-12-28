@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using XTI_App.Api;
 using XTI_Core;
 using XTI_Schedule;
 
@@ -21,22 +22,33 @@ namespace XTI_App.Hosting
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            var periodicSucceeded = false;
             while (!stoppingToken.IsCancellationRequested)
             {
-                var actionExecutor = new ActionExecutor
-                (
-                    sp,
-                    options.GroupName,
-                    options.ActionName,
-                    a =>
+                var clock = sp.GetService<Clock>();
+                var schedule = new Schedule(options.Schedule);
+                if (schedule.IsInSchedule(clock.Now()))
+                {
+                    if (options.Type != ScheduledActionTypes.PeriodicUntilSuccess || !periodicSucceeded)
                     {
-                        var clock = sp.GetService<Clock>();
-                        var schedule = new Schedule(options.Schedule);
-                        var scheduledAction = new ScheduledAction(clock, schedule, a);
-                        return scheduledAction.TryExecute();
+                        var actionExecutor = new ActionExecutor
+                        (
+                            sp,
+                            options.GroupName,
+                            options.ActionName,
+                            a => a.Execute(new EmptyRequest())
+                        );
+                        var result = await actionExecutor.Run();
+                        if (result == ActionExecutor.Results.Succeeded)
+                        {
+                            periodicSucceeded = true;
+                        }
                     }
-                );
-                await actionExecutor.Run();
+                }
+                else
+                {
+                    periodicSucceeded = false;
+                }
                 await Task.Delay(options.Interval, stoppingToken);
             }
         }
