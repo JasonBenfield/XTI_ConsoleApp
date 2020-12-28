@@ -16,17 +16,17 @@ namespace XTI_App.Hosting
 
         public XtiPath Value()
         {
-            string versionKey;
+            AppVersionKey versionKey;
             if (hostEnv.IsProduction())
             {
                 var appDir = new DirectoryInfo(hostEnv.ContentRootPath);
-                versionKey = appDir.Name;
+                versionKey = AppVersionKey.Parse(appDir.Name);
             }
             else
             {
-                versionKey = AppVersionKey.Current.DisplayText;
+                versionKey = AppVersionKey.Current;
             }
-            return new XtiPath(appKey.Name, versionKey);
+            return new XtiPath(appKey.Name).WithVersion(versionKey);
         }
     }
 }

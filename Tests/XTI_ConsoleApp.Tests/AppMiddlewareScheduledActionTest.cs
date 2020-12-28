@@ -52,7 +52,7 @@ namespace XTI_ConsoleApp.Tests
             clock.Set(new DateTime(2020, 10, 16, 13, 30, 0, DateTimeKind.Utc));
             var _ = Task.Run(() => host.StartAsync());
             var counter = host.Services.GetService<Counter>();
-            while (counter.Value == 0)
+            while (counter.ContinuousValue == 0)
             {
                 await Task.Delay(100);
             }

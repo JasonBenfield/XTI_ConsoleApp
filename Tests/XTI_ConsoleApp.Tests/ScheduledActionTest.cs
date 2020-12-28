@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using NUnit.Framework;
 using System;
 using System.Threading.Tasks;
-using XTI_App.Api;
 using XTI_Core;
 using XTI_Core.Fakes;
 using XTI_Schedule;
@@ -31,7 +31,7 @@ namespace XTI_ConsoleApp.Tests
             };
             input.Clock.Set(new DateTime(2020, 10, 19, 12, 0, 0));
             await input.ScheduledAction.TryExecute();
-            Assert.That(input.Counter.Value, Is.EqualTo(1), "Should run when scheduled");
+            Assert.That(input.Counter.ContinuousValue, Is.EqualTo(1), "Should run when scheduled");
         }
 
         [Test]
@@ -54,27 +54,31 @@ namespace XTI_ConsoleApp.Tests
             };
             input.Clock.Set(new DateTime(2020, 10, 20, 12, 0, 0));
             await input.ScheduledAction.TryExecute();
-            Assert.That(input.Counter.Value, Is.EqualTo(0), "Should not run when not scheduled");
+            Assert.That(input.Counter.ContinuousValue, Is.EqualTo(0), "Should not run when not scheduled");
         }
 
         private TestInput setup()
         {
-            var services = new ServiceCollection();
-            services.AddScoped<Schedule>();
-            services.AddScoped<ScheduleOptions>();
-            services.AddScoped<Clock, FakeClock>();
-            services.AddScoped<Counter>();
-            services.AddScoped<IAppApiUser, AppApiSuperUser>();
-            services.AddScoped<TestApi>();
-            services.AddScoped(sp =>
-            {
-                var clock = sp.GetService<Clock>();
-                var schedule = sp.GetService<Schedule>();
-                var api = sp.GetService<TestApi>();
-                return new ScheduledAction(clock, schedule, api.Test.Run);
-            });
-            var sp = services.BuildServiceProvider();
-            return new TestInput(sp);
+            var host = Host.CreateDefaultBuilder()
+                .ConfigureServices
+                (
+                    (hostContext, services) =>
+                    {
+                        services.AddTestServiceAppServices(hostContext.Configuration);
+                        services.AddScoped<Schedule>();
+                        services.AddScoped<ScheduleOptions>();
+                        services.AddScoped(sp =>
+                        {
+                            var clock = sp.GetService<Clock>();
+                            var schedule = sp.GetService<Schedule>();
+                            var api = sp.GetService<TestApi>();
+                            return new ScheduledAction(clock, schedule, api.Test.Run);
+                        });
+                    }
+                )
+                .Build();
+            var scope = host.Services.CreateScope();
+            return new TestInput(scope.ServiceProvider);
         }
 
         private sealed class TestInput

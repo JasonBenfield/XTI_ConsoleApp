@@ -1,28 +1,20 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using XTI_App;
 using XTI_App.Api;
 
 namespace XTI_ConsoleApp.Tests
 {
-    public sealed class Counter
-    {
-        public int Value { get; private set; }
-
-        public void Increment()
-        {
-            Value++;
-        }
-    }
     public sealed class TestAppKey
     {
         public static readonly AppKey Key = new AppKey("Test", AppType.Values.Service);
     }
     public sealed class TestApi : AppApi
     {
-        public TestApi(IAppApiUser user, Counter counter)
-            : base(TestAppKey.Key, AppVersionKey.Current, user, ResourceAccess.AllowAuthenticated())
+        public TestApi(IAppApiUser user, Counter counter, TestOptions options)
+            : base(TestAppKey.Key, user, ResourceAccess.AllowAuthenticated())
         {
-            Test = AddGroup(u => new TestGroup(this, u, counter));
+            Test = AddGroup(u => new TestGroup(this, u, counter, options));
         }
 
         public TestGroup Test { get; }
@@ -30,7 +22,7 @@ namespace XTI_ConsoleApp.Tests
 
     public sealed class TestGroup : AppApiGroup
     {
-        public TestGroup(AppApi api, IAppApiUser user, Counter counter)
+        public TestGroup(AppApi api, IAppApiUser user, Counter counter, TestOptions options)
             : base
             (
                 api,
@@ -45,27 +37,65 @@ namespace XTI_ConsoleApp.Tests
             Run = actions.Add
             (
                 nameof(Run),
-                () => new RunAction(counter)
+                () => new ContinuousRunAction(counter)
+            );
+            OptionalRun = actions.Add
+            (
+                nameof(OptionalRun),
+                () => new OptionalRunAction(counter, options)
             );
         }
 
         public AppApiAction<EmptyRequest, EmptyActionResult> Run { get; }
+        public AppApiAction<EmptyRequest, EmptyActionResult> OptionalRun { get; }
     }
 
-    public sealed class RunAction : AppAction<EmptyRequest, EmptyActionResult>
+    public sealed class ContinuousRunAction : AppAction<EmptyRequest, EmptyActionResult>
     {
         private readonly Counter counter;
 
-        public RunAction(Counter counter)
+        public ContinuousRunAction(Counter counter)
         {
             this.counter = counter;
         }
 
         public Task<EmptyActionResult> Execute(EmptyRequest model)
         {
-            counter.Increment();
+            counter.IncrementContinuous();
             return Task.FromResult(new EmptyActionResult());
         }
     }
 
+    public sealed class TestOptions
+    {
+        public bool IsOptional { get; set; }
+        public bool ThrowException { get; set; }
+    }
+
+    public sealed class OptionalRunAction : OptionalAction<EmptyRequest, EmptyActionResult>
+    {
+        private readonly Counter counter;
+        private readonly TestOptions options;
+
+        public OptionalRunAction(Counter counter, TestOptions options)
+        {
+            this.counter = counter;
+            this.options = options;
+        }
+
+        public Task<EmptyActionResult> Execute(EmptyRequest model)
+        {
+            counter.IncrementOptional();
+            if (options.ThrowException)
+            {
+                throw new Exception("Testing");
+            }
+            return Task.FromResult(new EmptyActionResult());
+        }
+
+        public Task<bool> IsOptional()
+        {
+            return Task.FromResult(options.IsOptional);
+        }
+    }
 }
