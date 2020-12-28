@@ -27,7 +27,7 @@ namespace XTI_ConsoleApp.Tests
                     config.AddInMemoryCollection(new[]
                     {
                         KeyValuePair.Create("AppAction:ImmediateActions:0:GroupName", "Test"),
-                        KeyValuePair.Create("AppAction:ImmediateActions:0:ActionName", "Run")
+                        KeyValuePair.Create("AppAction:ImmediateActions:0:ActionName", "RunContinuously")
                     });
                 })
                 .ConfigureServices((hostContext, services) =>

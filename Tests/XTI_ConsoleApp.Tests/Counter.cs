@@ -15,5 +15,12 @@
         {
             OptionalValue++;
         }
+
+        public int UntilSuccessValue { get; private set; }
+
+        public void IncrementUntilSuccess()
+        {
+            UntilSuccessValue++;
+        }
     }
 }

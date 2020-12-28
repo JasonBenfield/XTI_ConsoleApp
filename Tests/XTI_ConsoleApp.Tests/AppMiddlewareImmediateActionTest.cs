@@ -34,7 +34,7 @@ namespace XTI_ConsoleApp.Tests
             var clock = host.Services.GetService<Clock>();
             var startRequests = await getStartRequests(host.Services);
             var api = host.Services.GetService<TestApi>();
-            startRequests = startRequests.Where(r => api.Test.Run.Path.Equals(r.Path)).ToArray();
+            startRequests = startRequests.Where(r => api.Test.RunContinuously.Path.Equals(r.Path)).ToArray();
             Assert.That(startRequests.Length, Is.GreaterThan(0), "Should start request");
         }
 
@@ -115,7 +115,7 @@ namespace XTI_ConsoleApp.Tests
                     config.AddInMemoryCollection(new[]
                     {
                         KeyValuePair.Create("AppAction:ImmediateActions:0:GroupName", "Test"),
-                        KeyValuePair.Create("AppAction:ImmediateActions:0:ActionName", "Run")
+                        KeyValuePair.Create("AppAction:ImmediateActions:0:ActionName", "RunContinuously")
                     });
                 })
                 .UseWindowsService()
