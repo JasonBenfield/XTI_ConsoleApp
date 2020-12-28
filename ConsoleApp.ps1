@@ -67,4 +67,7 @@ function ConsoleApp-Publish {
         [switch] $Prod
     )
     $script:consoleAppConfig | Xti-PublishPackage @PsBoundParameters
+    if($Prod) {
+        $script:consoleAppConfig | Xti-Merge
+    }
 }

@@ -15,10 +15,12 @@ namespace XTI_ConsoleApp.Tests
         {
             services.AddSingleton<Clock, FakeClock>();
             services.AddSingleton<Counter>();
+            services.AddSingleton<TestOptions>();
             services.AddSingleton<IAppEnvironmentContext, FakeAppEnvironmentContext>();
             services.AddScoped<IAppApiUser, AppApiSuperUser>();
             services.AddScoped(_ => TestAppKey.Key);
-            services.AddScoped<AppApi, TestApi>();
+            services.AddScoped<TestApi>();
+            services.AddScoped<AppApi>(sp => sp.GetService<TestApi>());
             services.AddFakeServiceAppServices(configuration);
         }
     }

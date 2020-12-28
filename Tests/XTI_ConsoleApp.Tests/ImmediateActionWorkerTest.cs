@@ -15,7 +15,7 @@ namespace XTI_ConsoleApp.Tests
         public async Task ShouldRunImmediateAction()
         {
             await BuildHost().RunConsoleAsync();
-            Assert.That(counter.Value, Is.EqualTo(1));
+            Assert.That(counter.ContinuousValue, Is.EqualTo(1));
         }
 
         private IHostBuilder BuildHost()

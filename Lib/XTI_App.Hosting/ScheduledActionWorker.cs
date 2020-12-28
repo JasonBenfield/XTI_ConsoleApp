@@ -3,10 +3,8 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using XTI_App.Api;
 using XTI_Core;
 using XTI_Schedule;
-using XTI_TempLog;
 
 namespace XTI_App.Hosting
 {
@@ -25,31 +23,20 @@ namespace XTI_App.Hosting
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                using var scope = sp.CreateScope();
-                var session = scope.ServiceProvider.GetService<TempLogSession>();
-                var appEnv = await scope.ServiceProvider.GetService<IAppEnvironmentContext>().Value();
-                var path = scope.ServiceProvider.GetService<XtiBasePath>()
-                    .Value()
-                    .WithGroup(options.GroupName)
-                    .WithAction(options.ActionName)
-                    .Format();
-                try
-                {
-                    await session.StartRequest(path);
-                    var clock = scope.ServiceProvider.GetService<Clock>();
-                    var schedule = new Schedule(options.Schedule);
-                    var api = scope.ServiceProvider.GetService<AppApi>();
-                    var action = api
-                        .Group(options.GroupName)
-                        .Action<EmptyRequest, EmptyActionResult>(options.ActionName);
-                    var scheduledAction = new ScheduledAction(clock, schedule, action);
-                    await scheduledAction.TryExecute();
-                    await session.EndRequest();
-                }
-                catch (Exception ex)
-                {
-                    await session.LogException(AppEventSeverity.Values.CriticalError, ex, $"Unexpected error in {path}");
-                }
+                var actionExecutor = new ActionExecutor
+                (
+                    sp,
+                    options.GroupName,
+                    options.ActionName,
+                    a =>
+                    {
+                        var clock = sp.GetService<Clock>();
+                        var schedule = new Schedule(options.Schedule);
+                        var scheduledAction = new ScheduledAction(clock, schedule, a);
+                        return scheduledAction.TryExecute();
+                    }
+                );
+                await actionExecutor.Run();
                 await Task.Delay(options.Interval, stoppingToken);
             }
         }
