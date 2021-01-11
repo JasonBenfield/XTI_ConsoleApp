@@ -35,6 +35,8 @@ namespace XTI_ServiceApp.Extensions
             });
             services.AddSingleton<CurrentSession>();
             services.AddSingleton<XtiBasePath>();
+            services.AddSingleton(sp => sp.GetService<XtiBasePath>().Value());
+            services.AddScoped<IActionRunnerFactory, ActionRunnerFactory>();
             services.AddTempLogServices();
             services.AddAuthenticatorClientServices(configuration);
             services.AddFileSecretCredentials();

@@ -31,7 +31,7 @@ namespace XTI_App.Hosting
                 {
                     if (options.Type != ScheduledActionTypes.PeriodicUntilSuccess || !periodicSucceeded)
                     {
-                        var actionExecutor = new ActionExecutor
+                        var actionExecutor = new ActionRunner
                         (
                             sp,
                             options.GroupName,
@@ -39,7 +39,7 @@ namespace XTI_App.Hosting
                             a => a.Execute(new EmptyRequest())
                         );
                         var result = await actionExecutor.Run();
-                        if (result == ActionExecutor.Results.Succeeded)
+                        if (result == ActionRunner.Results.Succeeded)
                         {
                             periodicSucceeded = true;
                         }

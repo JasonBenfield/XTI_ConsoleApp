@@ -4,18 +4,17 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using XTI_Schedule;
-using XTI_TempLog;
 
 namespace XTI_App.Hosting
 {
-    public sealed class AppMiddleware
+    public sealed class MultiActionRunner
     {
         private readonly IServiceProvider sp;
         private readonly ImmediateActionOptions[] immediateActions;
         private readonly ScheduledActionOptions[] scheduledActions;
         private readonly AlwaysRunningActionOptions[] alwaysRunningActions;
 
-        public AppMiddleware
+        public MultiActionRunner
         (
             IServiceProvider sp,
             ImmediateActionOptions[] immediateActions,
@@ -32,7 +31,8 @@ namespace XTI_App.Hosting
         public async Task Start(CancellationToken stoppingToken)
         {
             using var scope = sp.CreateScope();
-            var session = scope.ServiceProvider.GetService<TempLogSession>();
+            var factory = scope.ServiceProvider.GetService<IActionRunnerFactory>();
+            var session = factory.CreateTempLogSession();
             await session.StartSession();
             var tasks = getTasks(stoppingToken);
             await Task.WhenAll(tasks);

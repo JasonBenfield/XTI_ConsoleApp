@@ -17,8 +17,6 @@ namespace XTI_ConsoleApp.Tests
             services.AddSingleton<Clock, FakeClock>();
             services.AddSingleton<Counter>();
             services.AddSingleton<TestOptions>();
-            services.AddSingleton<XtiBasePath>();
-            services.AddSingleton<IAppEnvironmentContext, FakeAppEnvironmentContext>();
             services.AddScoped<IAppApiUser, AppApiSuperUser>();
             services.AddScoped(_ => TestAppKey.Key);
             services.AddScoped<AppApi, TestApi>();

@@ -22,7 +22,7 @@ namespace XTI_ConsoleApp
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var worker = new AppMiddleware(sp, options.ImmediateActions, options.ScheduledActions, options.AlwaysRunningActions);
+            var worker = new MultiActionRunner(sp, options.ImmediateActions, options.ScheduledActions, options.AlwaysRunningActions);
             await worker.Start(stoppingToken);
             var lifetime = sp.GetService<IHostApplicationLifetime>();
             lifetime.StopApplication();

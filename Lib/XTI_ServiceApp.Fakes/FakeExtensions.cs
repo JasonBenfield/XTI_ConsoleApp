@@ -6,6 +6,7 @@ using XTI_Core;
 using XTI_Core.Fakes;
 using XTI_Schedule;
 using XTI_ServiceApp;
+using XTI_TempLog;
 using XTI_TempLog.Fakes;
 
 namespace XTI_ConsoleApp.Fakes
@@ -19,6 +20,9 @@ namespace XTI_ConsoleApp.Fakes
             services.AddSingleton<Clock, FakeClock>();
             services.Configure<AppActionOptions>(configuration.GetSection(AppActionOptions.AppAction));
             services.AddSingleton<XtiBasePath>();
+            services.AddSingleton(sp => sp.GetService<XtiBasePath>().Value());
+            services.AddScoped<IActionRunnerFactory, ActionRunnerFactory>();
+            services.AddSingleton<IAppEnvironmentContext, FakeAppEnvironmentContext>();
             services.AddFakeTempLogServices();
             services.AddHostedService<ServiceAppWorker>();
         }

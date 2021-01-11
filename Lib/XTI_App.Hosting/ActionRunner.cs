@@ -7,14 +7,14 @@ using XTI_TempLog;
 
 namespace XTI_App.Hosting
 {
-    public sealed class ActionExecutor
+    public sealed class ActionRunner
     {
         private readonly IServiceProvider sp;
         private readonly string groupName;
         private readonly string actionName;
         private readonly Func<AppApiAction<EmptyRequest, EmptyActionResult>, Task> execute;
 
-        public ActionExecutor
+        public ActionRunner
         (
             IServiceProvider sp,
             string groupName,
@@ -39,21 +39,22 @@ namespace XTI_App.Hosting
         public async Task<Results> Run()
         {
             using var scope = sp.CreateScope();
-            var result = await verifyActionIsRequired(scope.ServiceProvider);
+            var factory = scope.ServiceProvider.GetService<IActionRunnerFactory>();
+            var result = await verifyActionIsRequired(factory);
             if (result == Results.None)
             {
-                result = await run(scope.ServiceProvider);
+                result = await run(factory);
             }
             return result;
         }
 
-        private async Task<Results> verifyActionIsRequired(IServiceProvider services)
+        private async Task<Results> verifyActionIsRequired(IActionRunnerFactory factory)
         {
             var result = Results.None;
-            var session = services.GetService<TempLogSession>();
+            var session = factory.CreateTempLogSession();
             try
             {
-                var action = getApiAction(services);
+                var action = getApiAction(factory);
                 var isOptional = await action.IsOptional();
                 if (isOptional)
                 {
@@ -62,7 +63,7 @@ namespace XTI_App.Hosting
             }
             catch (Exception ex)
             {
-                var path = getPath(services);
+                var path = getPath(factory);
                 await session.StartRequest(path);
                 await session.LogException(AppEventSeverity.Values.CriticalError, ex, $"Unexpected error in {path}");
                 await session.EndRequest();
@@ -71,15 +72,15 @@ namespace XTI_App.Hosting
             return result;
         }
 
-        private async Task<Results> run(IServiceProvider services)
+        private async Task<Results> run(IActionRunnerFactory factory)
         {
             Results result = Results.None;
-            var session = services.GetService<TempLogSession>();
-            var path = getPath(services);
+            var session = factory.CreateTempLogSession();
+            var path = getPath(factory);
             try
             {
                 await session.StartRequest(path);
-                var action = getApiAction(services);
+                var action = getApiAction(factory);
                 await execute(action);
                 result = Results.Succeeded;
             }
@@ -100,18 +101,17 @@ namespace XTI_App.Hosting
             return result;
         }
 
-        private string getPath(IServiceProvider services)
+        private string getPath(IActionRunnerFactory factory)
         {
-            return services.GetService<XtiBasePath>()
-                .Value()
-                .WithGroup(groupName)
+            return factory.CreateXtiPath()
+                .WithNewGroup(groupName)
                 .WithAction(actionName)
                 .Format();
         }
 
-        private AppApiAction<EmptyRequest, EmptyActionResult> getApiAction(IServiceProvider services)
+        private AppApiAction<EmptyRequest, EmptyActionResult> getApiAction(IActionRunnerFactory factory)
         {
-            var api = services.GetService<AppApi>();
+            var api = factory.CreateAppApi();
             return api
                 .Group(groupName)
                 .Action<EmptyRequest, EmptyActionResult>(actionName);

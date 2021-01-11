@@ -20,7 +20,7 @@ namespace XTI_App.Hosting
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var actionExecutor = new ActionExecutor
+            var actionExecutor = new ActionRunner
             (
                 sp,
                 options.GroupName,
