@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using XTI_App.Api;
 using XTI_Core;
 using XTI_Schedule;
-using XTI_TempLog;
 
 namespace XTI_App.Hosting
 {
@@ -23,32 +22,32 @@ namespace XTI_App.Hosting
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            var periodicSucceeded = false;
             while (!stoppingToken.IsCancellationRequested)
             {
-                using var scope = sp.CreateScope();
-                var session = scope.ServiceProvider.GetService<TempLogSession>();
-                var appEnv = await scope.ServiceProvider.GetService<IAppEnvironmentContext>().Value();
-                var path = scope.ServiceProvider.GetService<XtiBasePath>()
-                    .Value()
-                    .WithGroup(options.GroupName)
-                    .WithAction(options.ActionName)
-                    .Format();
-                try
+                var clock = sp.GetService<Clock>();
+                var schedule = new Schedule(options.Schedule);
+                if (schedule.IsInSchedule(clock.Now()))
                 {
-                    await session.StartRequest(path);
-                    var clock = scope.ServiceProvider.GetService<Clock>();
-                    var schedule = new Schedule(options.Schedule);
-                    var api = scope.ServiceProvider.GetService<AppApi>();
-                    var action = api
-                        .Group(options.GroupName)
-                        .Action<EmptyRequest, EmptyActionResult>(options.ActionName);
-                    var scheduledAction = new ScheduledAction(clock, schedule, action);
-                    await scheduledAction.TryExecute();
-                    await session.EndRequest();
+                    if (options.Type != ScheduledActionTypes.PeriodicUntilSuccess || !periodicSucceeded)
+                    {
+                        var actionExecutor = new ActionRunner
+                        (
+                            sp,
+                            options.GroupName,
+                            options.ActionName,
+                            a => a.Execute(new EmptyRequest())
+                        );
+                        var result = await actionExecutor.Run();
+                        if (result == ActionRunner.Results.Succeeded)
+                        {
+                            periodicSucceeded = true;
+                        }
+                    }
                 }
-                catch (Exception ex)
+                else
                 {
-                    await session.LogException(AppEventSeverity.Values.CriticalError, ex, $"Unexpected error in {path}");
+                    periodicSucceeded = false;
                 }
                 await Task.Delay(options.Interval, stoppingToken);
             }

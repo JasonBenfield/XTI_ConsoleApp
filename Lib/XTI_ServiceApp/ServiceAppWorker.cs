@@ -21,7 +21,7 @@ namespace XTI_ServiceApp
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var worker = new AppMiddleware
+            var worker = new MultiActionRunner
             (
                 sp,
                 options.ImmediateActions,

@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="XTI_App.Api" Version="1.6.5" />
+    <PackageReference Include="XTI_Core" Version="1.8.9" />
   </ItemGroup>
 
 </Project>

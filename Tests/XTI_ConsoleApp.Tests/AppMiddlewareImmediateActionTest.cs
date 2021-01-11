@@ -2,11 +2,13 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using XTI_Core;
+using XTI_Core.Fakes;
 using XTI_TempLog;
 using XTI_TempLog.Fakes;
 
@@ -30,11 +32,30 @@ namespace XTI_ConsoleApp.Tests
             var host = await runService();
             var tempLog = host.Services.GetService<TempLog>();
             var clock = host.Services.GetService<Clock>();
-            var startRequestFiles = tempLog.StartRequestFiles(clock.Now());
-            Assert.That(startRequestFiles.Count(), Is.EqualTo(1), "Should start request");
-            var requestContent = await startRequestFiles.First().Read();
-            var request = JsonSerializer.Deserialize<StartRequestModel>(requestContent);
-            Assert.That(request.Path, Is.EqualTo("Test/Run"));
+            var startRequests = await getStartRequests(host.Services);
+            var api = host.Services.GetService<TestApi>();
+            startRequests = startRequests.Where(r => api.Test.RunContinuously.Path.Equals(r.Path)).ToArray();
+            Assert.That(startRequests.Length, Is.GreaterThan(0), "Should start request");
+        }
+
+        private Task<StartRequestModel[]> getStartRequests(IServiceProvider services)
+        {
+            var tempLog = services.GetService<TempLog>();
+            var clock = (FakeClock)services.GetService<Clock>();
+            var files = tempLog.StartRequestFiles(clock.Now()).ToArray();
+            return deserializeLogFiles<StartRequestModel>(files);
+        }
+
+        private async Task<T[]> deserializeLogFiles<T>(IEnumerable<ITempLogFile> logFiles)
+        {
+            var logObjects = new List<T>();
+            foreach (var logFile in logFiles)
+            {
+                var deserialized = await logFile.Read();
+                var logObject = JsonSerializer.Deserialize<T>(deserialized);
+                logObjects.Add(logObject);
+            }
+            return logObjects.ToArray();
         }
 
         [Test]
@@ -76,7 +97,7 @@ namespace XTI_ConsoleApp.Tests
             );
             var _ = Task.Run(() => host.StartAsync());
             var counter = host.Services.GetService<Counter>();
-            while (counter.Value == 0)
+            while (counter.ContinuousValue == 0)
             {
                 await Task.Delay(100);
             }
@@ -86,6 +107,7 @@ namespace XTI_ConsoleApp.Tests
 
         private IHostBuilder BuildHost()
         {
+            Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Test");
             return Host.CreateDefaultBuilder(new string[] { })
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
@@ -93,7 +115,7 @@ namespace XTI_ConsoleApp.Tests
                     config.AddInMemoryCollection(new[]
                     {
                         KeyValuePair.Create("AppAction:ImmediateActions:0:GroupName", "Test"),
-                        KeyValuePair.Create("AppAction:ImmediateActions:0:ActionName", "Run")
+                        KeyValuePair.Create("AppAction:ImmediateActions:0:ActionName", "RunContinuously")
                     });
                 })
                 .UseWindowsService()

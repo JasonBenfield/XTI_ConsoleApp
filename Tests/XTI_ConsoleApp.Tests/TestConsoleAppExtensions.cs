@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using XTI_App.Api;
+using XTI_App.Hosting;
 using XTI_ConsoleApp.Fakes;
 using XTI_Core;
 using XTI_Core.Fakes;
@@ -15,7 +16,7 @@ namespace XTI_ConsoleApp.Tests
         {
             services.AddSingleton<Clock, FakeClock>();
             services.AddSingleton<Counter>();
-            services.AddSingleton<IAppEnvironmentContext, FakeAppEnvironmentContext>();
+            services.AddSingleton<TestOptions>();
             services.AddScoped<IAppApiUser, AppApiSuperUser>();
             services.AddScoped(_ => TestAppKey.Key);
             services.AddScoped<AppApi, TestApi>();

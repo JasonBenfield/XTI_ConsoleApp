@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore.Internal;
-using System;
+﻿using System;
 using System.Linq;
+using XTI_Core;
 
 namespace XTI_Schedule
 {
@@ -13,7 +13,7 @@ namespace XTI_Schedule
             this.options = options ?? new ScheduleOptions();
         }
 
-        public bool IsInSchedule(DateTime dateTime)
+        public bool IsInSchedule(DateTimeOffset dateTime)
         {
             if (!options.IsUtc)
             {
@@ -35,10 +35,15 @@ namespace XTI_Schedule
             return isInSchedule;
         }
 
-        private bool isInTimeRange(DateTime dateTime, TimeRangeOptions timeRange)
+        private bool isInTimeRange(DateTimeOffset dateTime, TimeRangeOptions timeRangeOptions)
         {
-            var time = dateTime.Hour * 100 + dateTime.Minute;
-            return time >= timeRange.StartTime && time <= timeRange.EndTime;
+            var date = new DateTimeOffset(dateTime.Year, dateTime.Month, dateTime.Day, 0, 0, 0, dateTime.Offset);
+            var timeRange = TimeRange.Between
+            (
+                date.AddHours(timeRangeOptions.StartTime / 100).AddMinutes(timeRangeOptions.StartTime % 100),
+                date.AddHours(timeRangeOptions.EndTime / 100).AddMinutes(timeRangeOptions.EndTime % 100)
+            );
+            return timeRange.IsInRange(dateTime);
         }
     }
 }
