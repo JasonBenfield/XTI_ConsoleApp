@@ -10,7 +10,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.1" />
     <PackageReference Include="XTI_App.Api" Version="1.7.1" />
     <PackageReference Include="MainDB.EF.SqlServer" Version="1.10.2" />
-    <PackageReference Include="XTI_AuthenticatorClient.Extensions" Version="1.4.6-dev210118121145765" />
+    <PackageReference Include="XTI_AuthenticatorClient.Extensions" Version="1.4.6" />
     <PackageReference Include="XTI_Secrets.Extensions" Version="1.7.4" />
     <PackageReference Include="XTI_TempLog.Extensions" Version="1.2.6" />
   </ItemGroup>
