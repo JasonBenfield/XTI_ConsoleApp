@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using XTI_App;
 using XTI_App.Api;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace XTI_ConsoleApp.Tests
 {
@@ -9,45 +10,72 @@ namespace XTI_ConsoleApp.Tests
     {
         public static readonly AppKey Key = new AppKey("Test", AppType.Values.Service);
     }
-    public sealed class TestApi : AppApi
+    public sealed class TestApiFactory : AppApiFactory
+    {
+        private readonly IServiceProvider services;
+
+        public TestApiFactory(IServiceProvider services)
+        {
+            this.services = services;
+        }
+
+        protected override IAppApi _Create(IAppApiUser user)
+            =>
+                new TestApi
+                (
+                    user,
+                    services.GetService<Counter>(),
+                    services.GetService<TestOptions>()
+                );
+    }
+    public sealed class TestApi : AppApiWrapper
     {
         public TestApi(IAppApiUser user, Counter counter, TestOptions options)
-            : base(TestAppKey.Key, user, ResourceAccess.AllowAuthenticated())
+            : base
+            (
+                new AppApi
+                (
+                    TestAppKey.Key,
+                    user,
+                    ResourceAccess.AllowAuthenticated()
+                )
+            )
         {
-            Test = AddGroup(u => new TestGroup(this, u, counter, options));
+            Test = new TestGroup(source.AddGroup(nameof(Test)), counter, options);
         }
 
         public TestGroup Test { get; }
     }
 
-    public sealed class TestGroup : AppApiGroup
+    public sealed class TestGroup : AppApiGroupWrapper
     {
-        public TestGroup(AppApi api, IAppApiUser user, Counter counter, TestOptions options)
-            : base
-            (
-                api,
-                new NameFromGroupClassName(nameof(TestGroup)).Value,
-                ModifierCategoryName.Default,
-                api.Access,
-                user,
-                (n, a, u) => new AppApiActionCollection(n, a, u)
-            )
+        public TestGroup(AppApiGroup source, Counter counter, TestOptions options)
+            : base(source)
         {
-            var actions = Actions<AppApiActionCollection>();
-            RunContinuously = actions.Add
+            var actions = new AppApiActionFactory(source);
+            RunContinuously = source.AddAction
             (
-                nameof(RunContinuously),
-                () => new RunContinuouslyAction(counter)
+                actions.Action
+                (
+                    nameof(RunContinuously),
+                    () => new RunContinuouslyAction(counter)
+                )
             );
-            RunUntilSuccess = actions.Add
+            RunUntilSuccess = source.AddAction
             (
-                nameof(RunUntilSuccess),
-                () => new RunUntilSuccessAction(counter)
+                actions.Action
+                (
+                    nameof(RunUntilSuccess),
+                    () => new RunUntilSuccessAction(counter)
+                )
             );
-            OptionalRun = actions.Add
+            OptionalRun = source.AddAction
             (
-                nameof(OptionalRun),
-                () => new OptionalRunAction(counter, options)
+                actions.Action
+                (
+                    nameof(OptionalRun),
+                    () => new OptionalRunAction(counter, options)
+                )
             );
         }
 

@@ -14,7 +14,7 @@ namespace XTI_App.Hosting
             this.services = services;
         }
 
-        public AppApi CreateAppApi() => services.GetService<AppApi>();
+        public IAppApi CreateAppApi() => services.GetService<IAppApi>();
 
         public TempLogSession CreateTempLogSession() => services.GetService<TempLogSession>();
 
