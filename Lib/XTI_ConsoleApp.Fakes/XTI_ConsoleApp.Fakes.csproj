@@ -8,9 +8,9 @@
     <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="5.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="5.0.0" />
-    <PackageReference Include="MainDB.EF.InMemory" Version="1.9.4" />
-    <PackageReference Include="XTI_Core.Fakes" Version="1.8.9" />
-    <PackageReference Include="XTI_TempLog.Fakes" Version="1.2.5" />
+    <PackageReference Include="MainDB.EF.InMemory" Version="1.10.2" />
+    <PackageReference Include="XTI_Core.Fakes" Version="1.8.11" />
+    <PackageReference Include="XTI_TempLog.Fakes" Version="1.2.6" />
   </ItemGroup>
 
   <ItemGroup>

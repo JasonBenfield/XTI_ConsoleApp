@@ -190,8 +190,11 @@ namespace XTI_ConsoleApp.Tests
             foreach (var logFile in logFiles)
             {
                 var deserialized = await logFile.Read();
-                var logObject = JsonSerializer.Deserialize<T>(deserialized);
-                logObjects.Add(logObject);
+                if (!string.IsNullOrWhiteSpace(deserialized))
+                {
+                    var logObject = JsonSerializer.Deserialize<T>(deserialized);
+                    logObjects.Add(logObject);
+                }
             }
             return logObjects.ToArray();
         }

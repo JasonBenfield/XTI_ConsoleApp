@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using XTI_App;
+using XTI_App.Api;
 using XTI_App.Hosting;
 using XTI_AuthenticatorClient.Extensions;
 using XTI_ConsoleApp;
@@ -31,12 +32,17 @@ namespace XTI_ServiceApp.Extensions
                 return new AppDataFolder()
                     .WithHostEnvironment(hostEnv)
                     .WithSubFolder("ServiceApps")
-                    .WithSubFolder(appKey.Name.DisplayText);
+                    .WithSubFolder(appKey.Name.DisplayText.Replace(" ", ""));
             });
             services.AddSingleton<CurrentSession>();
             services.AddSingleton<XtiBasePath>();
             services.AddSingleton(sp => sp.GetService<XtiBasePath>().Value());
             services.AddScoped<IActionRunnerFactory, ActionRunnerFactory>();
+            services.AddScoped(sp =>
+            {
+                var factory = sp.GetService<AppApiFactory>();
+                return factory.CreateForSuperUser();
+            });
             services.AddTempLogServices();
             services.AddAuthenticatorClientServices(configuration);
             services.AddFileSecretCredentials();

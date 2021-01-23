@@ -1,6 +1,7 @@
 ﻿using MainDB.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using XTI_App.Api;
 using XTI_App.Hosting;
 using XTI_Core;
 using XTI_Core.Fakes;
@@ -24,6 +25,11 @@ namespace XTI_ConsoleApp.Fakes
             services.AddScoped<IActionRunnerFactory, ActionRunnerFactory>();
             services.AddSingleton<IAppEnvironmentContext, FakeAppEnvironmentContext>();
             services.AddFakeTempLogServices();
+            services.AddScoped(sp =>
+            {
+                var factory = sp.GetService<AppApiFactory>();
+                return factory.CreateForSuperUser();
+            });
             services.AddHostedService<ServiceAppWorker>();
         }
     }

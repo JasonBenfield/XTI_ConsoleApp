@@ -19,8 +19,9 @@ namespace XTI_ConsoleApp.Tests
             services.AddSingleton<IAppEnvironmentContext, FakeAppEnvironmentContext>();
             services.AddScoped<IAppApiUser, AppApiSuperUser>();
             services.AddScoped(_ => TestAppKey.Key);
-            services.AddScoped<TestApi>();
-            services.AddScoped<AppApi>(sp => sp.GetService<TestApi>());
+            services.AddScoped<AppApiFactory, TestApiFactory>();
+            services.AddScoped(sp => sp.GetService<AppApiFactory>().CreateForSuperUser());
+            services.AddScoped(sp => (TestApi)sp.GetService<IAppApi>());
             services.AddFakeServiceAppServices(configuration);
         }
     }
